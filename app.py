@@ -9,7 +9,10 @@ import numpy as np
 import os
 import base64
 import json
-from typing import Tuple
+from typing import Tuple, Dict, Any
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 # Try to import ML dependencies (graceful fallback if not available)
 try:
@@ -435,23 +438,34 @@ if __name__ == "__main__":
     # Get the FastAPI app from Gradio
     fastapi_app = app.app
     
-    # Add Flask-compatible routes to FastAPI
+    # Add CORS middleware
+    fastapi_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
+    # Add health check endpoint
     @fastapi_app.get("/health")
     async def health_check():
         """Health check endpoint"""
-        return {
+        return JSONResponse({
             'status': 'ok',
             'model_loaded': model is not None and hand_detector is not None
-        }
+        })
     
+    # Add detection endpoint
     @fastapi_app.post("/detect")
-    async def detect_sign(request: dict):
+    async def detect_sign(request: Request):
         """Detection endpoint compatible with React frontend"""
         try:
-            image_b64 = request.get('image', '')
+            data = await request.json()
+            image_b64 = data.get('image', '')
             
             if not image_b64:
-                return {'success': False, 'error': 'No image provided'}
+                return JSONResponse({'success': False, 'error': 'No image provided'}, status_code=400)
             
             # Decode base64 image
             if ',' in image_b64:
@@ -462,7 +476,7 @@ if __name__ == "__main__":
             image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
             if image is None:
-                return {'success': False, 'error': 'Invalid image'}
+                return JSONResponse({'success': False, 'error': 'Invalid image'}, status_code=400)
             
             # Preprocess
             processed_image = preprocess_image(image)
@@ -471,21 +485,21 @@ if __name__ == "__main__":
             features, landmarks_info = extract_hand_features(processed_image)
             
             if features is None:
-                return {
+                return JSONResponse({
                     'success': False,
                     'prediction': '-',
                     'confidence': 0,
                     'message': 'No hand detected'
-                }
+                })
             
             # Predict
             if len(features) != 42:
-                return {
+                return JSONResponse({
                     'success': False,
                     'prediction': '-',
                     'confidence': 0,
                     'message': 'Invalid hand data'
-                }
+                })
             
             prediction = model.predict([features])
             predicted_label = LABELS[int(prediction[0])]
@@ -511,7 +525,7 @@ if __name__ == "__main__":
             for lm in landmarks_info['landmarks']:
                 landmarks.append({'x': lm.x, 'y': lm.y, 'z': lm.z})
             
-            return {
+            return JSONResponse({
                 'success': True,
                 'prediction': predicted_label,
                 'confidence': confidence,
@@ -520,14 +534,15 @@ if __name__ == "__main__":
                     'x2': x2, 'y2': y2
                 },
                 'landmarks': landmarks
-            }
+            })
             
         except Exception as e:
-            return {
+            return JSONResponse({
                 'success': False,
                 'error': str(e)
-            }
+            }, status_code=500)
     
     # Launch app
+    print("API endpoints registered: /health, /detect")
     app.launch()
 
