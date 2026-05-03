@@ -51,7 +51,7 @@ def load_models():
     global model, hand_detector
     
     if not ML_AVAILABLE:
-        print("⚠️ Running in demo mode - ML libraries not available")
+        print("Running in demo mode - ML libraries not available")
         return False
     
     try:
@@ -61,9 +61,9 @@ def load_models():
             with open(model_path, 'rb') as f:
                 model_dict = pickle.load(f)
                 model = model_dict['model']
-            print("✅ Model loaded successfully")
+            print("Model loaded successfully")
         else:
-            print(f"⚠️ Model file not found at {model_path}")
+            print(f"Model file not found at {model_path}")
             model = None
         
         # Load MediaPipe hand detector
@@ -78,15 +78,15 @@ def load_models():
                 min_tracking_confidence=0.3
             )
             hand_detector = vision.HandLandmarker.create_from_options(options)
-            print("✅ Hand detector loaded successfully")
+            print("Hand detector loaded successfully")
         else:
-            print(f"⚠️ Hand detector not found at {detector_path}")
+            print(f"Hand detector not found at {detector_path}")
             hand_detector = None
         
         return model is not None and hand_detector is not None
         
     except Exception as e:
-        print(f"❌ Error loading models: {e}")
+        print(f"Error loading models: {e}")
         return False
 
 # ============================================================================
@@ -342,35 +342,24 @@ Please try again with a different image.
 def create_app():
     """Create Gradio interface"""
     
-    # Custom CSS
-    css = """
-    .gradio-container {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .output-markdown {
-        font-size: 16px;
-    }
-    """
-    
     # Create interface
     demo = gr.Interface(
         fn=predict,
         inputs=gr.Image(
-            label="📸 Upload Image or Use Camera",
+            label="Upload Image or Use Camera",
             type="numpy",
             sources=["upload", "webcam"]
         ),
         outputs=[
             gr.Image(
-                label="🖼️ Detection Result",
+                label="Detection Result",
                 type="numpy"
             ),
             gr.Markdown(
-                label="📋 Prediction",
-                elem_classes=["output-markdown"]
+                label="Prediction"
             )
         ],
-        title="🤟 Sign Language Detection",
+        title="Sign Language Detection",
         description="""
 ### Welcome to ASL Sign Language Detector!
 
@@ -379,28 +368,28 @@ This app detects **American Sign Language (ASL)** hand gestures using Machine Le
 **Supported Signs:** A-Z letters, SPACE, and SEND
 
 **How to use:**
-1. 📸 Upload an image or use your webcam
-2. ✋ Show a clear ASL hand gesture  
-3. 🎯 Get instant prediction with confidence score
+1. Upload an image or use your webcam
+2. Show a clear ASL hand gesture  
+3. Get instant prediction with confidence score
 
 **For best results:**
-- ✅ Good lighting
-- ✅ Plain background
-- ✅ Hand clearly visible
-- ✅ Hold gesture steady
+- Good lighting
+- Plain background
+- Hand clearly visible
+- Hold gesture steady
         """,
         article="""
 ---
 
-### 📚 About This Project
+### About This Project
 
 **MyHearingBuddy** - An AI-powered sign language detection system
 
 **Technology:**
-- 🤖 Machine Learning: Random Forest Classifier
-- 🤚 Hand Detection: MediaPipe
-- 🖼️ Image Processing: OpenCV
-- 🎨 Interface: Gradio
+- Machine Learning: Random Forest Classifier
+- Hand Detection: MediaPipe
+- Image Processing: OpenCV
+- Interface: Gradio
 
 **Model Details:**
 - 28 classes (A-Z + SPACE + SEND)
@@ -413,14 +402,8 @@ This app detects **American Sign Language (ASL)** hand gestures using Machine Le
 
 ---
 
-Made with ❤️ by Rohit | Powered by Hugging Face 🤗
-        """,
-        theme=gr.themes.Soft(
-            primary_hue="green",
-            secondary_hue="blue",
-        ),
-        css=css,
-        allow_flagging="never"
+Made with love by Rohit | Powered by Hugging Face
+        """
     )
     
     return demo
@@ -431,24 +414,24 @@ Made with ❤️ by Rohit | Powered by Hugging Face 🤗
 
 if __name__ == "__main__":
     print("=" * 70)
-    print("🚀 Sign Language Detection App")
+    print("Sign Language Detection App")
     print("=" * 70)
     
     # Load models
-    print("\n📦 Loading models...")
+    print("\nLoading models...")
     models_loaded = load_models()
     
     if models_loaded:
-        print("✅ All models loaded successfully!")
+        print("All models loaded successfully!")
     else:
-        print("⚠️ Running in demo mode (models not available)")
+        print("Running in demo mode (models not available)")
     
     # Create and launch app
-    print("\n🌐 Launching Gradio interface...")
+    print("\nLaunching Gradio interface...")
     app = create_app()
     
     app.launch(
         server_name="0.0.0.0",
-        server_port=7860,
+        server_port=7861,
         share=False
     )
