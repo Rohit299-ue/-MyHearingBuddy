@@ -431,16 +431,19 @@ if __name__ == "__main__":
     else:
         print("Running in demo mode (models not available)")
     
-    # Create Gradio app FIRST
+    # Create Gradio app
     print("\nCreating Gradio interface...")
     demo = create_app()
     
-    # Create a custom FastAPI app
-    from fastapi import FastAPI
-    custom_app = FastAPI()
+    # Add custom routes BEFORE launch using queue
+    print("Adding custom API routes...")
     
-    # Add CORS middleware to custom app
-    custom_app.add_middleware(
+    # Get FastAPI app
+    app = demo.app
+    
+    # Add CORS
+    from fastapi.middleware.cors import CORSMiddleware
+    app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_credentials=True,
@@ -448,27 +451,25 @@ if __name__ == "__main__":
         allow_headers=["*"],
     )
     
-    # Add health check endpoint
-    @custom_app.get("/health")
+    # Health endpoint
+    @app.api_route("/health", methods=["GET"])
     async def health_check():
-        """Health check endpoint"""
         return {
-            'status': 'ok',
-            'model_loaded': model is not None and hand_detector is not None
+            "status": "ok",
+            "model_loaded": model is not None and hand_detector is not None
         }
     
-    # Add detection endpoint
-    @custom_app.post("/detect")
+    # Detect endpoint
+    @app.api_route("/detect", methods=["POST"])
     async def detect_sign(request: Request):
-        """Detection endpoint compatible with React frontend"""
         try:
             data = await request.json()
             image_b64 = data.get('image', '')
             
             if not image_b64:
-                return JSONResponse({'success': False, 'error': 'No image provided'}, status_code=400)
+                return {"success": False, "error": "No image provided"}
             
-            # Decode base64 image
+            # Decode base64
             if ',' in image_b64:
                 image_b64 = image_b64.split(',')[1]
             
@@ -477,78 +478,61 @@ if __name__ == "__main__":
             image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
             if image is None:
-                return JSONResponse({'success': False, 'error': 'Invalid image'}, status_code=400)
+                return {"success": False, "error": "Invalid image"}
             
-            # Preprocess
+            # Process
             processed_image = preprocess_image(image)
-            
-            # Extract features
             features, landmarks_info = extract_hand_features(processed_image)
             
             if features is None:
-                return JSONResponse({
-                    'success': False,
-                    'prediction': '-',
-                    'confidence': 0,
-                    'message': 'No hand detected'
-                })
+                return {
+                    "success": False,
+                    "prediction": "-",
+                    "confidence": 0,
+                    "message": "No hand detected"
+                }
+            
+            if len(features) != 42:
+                return {
+                    "success": False,
+                    "prediction": "-",
+                    "confidence": 0,
+                    "message": "Invalid hand data"
+                }
             
             # Predict
-            if len(features) != 42:
-                return JSONResponse({
-                    'success': False,
-                    'prediction': '-',
-                    'confidence': 0,
-                    'message': 'Invalid hand data'
-                })
-            
             prediction = model.predict([features])
             predicted_label = LABELS[int(prediction[0])]
-            
             probabilities = model.predict_proba([features])
             confidence = float(np.max(probabilities))
             
-            # Get bounding box
+            # Bounding box
             h, w = processed_image.shape[:2]
             x_coords = landmarks_info['x_coords']
             y_coords = landmarks_info['y_coords']
             
-            x1 = int(min(x_coords) * w) - 20
-            y1 = int(min(y_coords) * h) - 20
-            x2 = int(max(x_coords) * w) + 20
-            y2 = int(max(y_coords) * h) + 20
+            x1 = max(0, int(min(x_coords) * w) - 20)
+            y1 = max(0, int(min(y_coords) * h) - 20)
+            x2 = min(w, int(max(x_coords) * w) + 20)
+            y2 = min(h, int(max(y_coords) * h) + 20)
             
-            x1, y1 = max(0, x1), max(0, y1)
-            x2, y2 = min(w, x2), min(h, y2)
-            
-            # Get landmarks for frontend
-            landmarks = []
-            for lm in landmarks_info['landmarks']:
-                landmarks.append({'x': lm.x, 'y': lm.y, 'z': lm.z})
+            # Landmarks
+            landmarks = [{'x': lm.x, 'y': lm.y, 'z': lm.z} for lm in landmarks_info['landmarks']]
             
             return {
-                'success': True,
-                'prediction': predicted_label,
-                'confidence': confidence,
-                'bounding_box': {
-                    'x1': x1, 'y1': y1,
-                    'x2': x2, 'y2': y2
-                },
-                'landmarks': landmarks
+                "success": True,
+                "prediction": predicted_label,
+                "confidence": confidence,
+                "bounding_box": {"x1": x1, "y1": y1, "x2": x2, "y2": y2},
+                "landmarks": landmarks
             }
             
         except Exception as e:
-            return JSONResponse({
-                'success': False,
-                'error': str(e)
-            }, status_code=500)
+            return {"success": False, "error": str(e)}
     
-    # Mount Gradio app to custom FastAPI app
-    from gradio.routes import mount_gradio_app
-    app = mount_gradio_app(custom_app, demo, path="/")
+    print("✅ Custom API routes added: /health, /detect")
+    print("🚀 Launching app...")
     
-    # Launch app
-    print("✅ API endpoints registered: /health, /detect")
-    print("🚀 Launching Gradio app with custom FastAPI...")
-    demo.launch(app_kwargs={"app": app})
+    # Launch
+    demo.launch()
 
