@@ -1,171 +1,56 @@
-# 🤟 MyHearingBuddy - Sign Language Communication System
+---
+title: Sign Language Detection
+emoji: 🤟
+colorFrom: blue
+colorTo: green
+sdk: gradio
+sdk_version: 4.44.0
+app_file: app.py
+pinned: false
+license: mit
+---
 
-A beautiful, modern web application that helps bridge communication gaps between hearing and speech-impaired people using real-time sign language detection and conversion.
+# 🤟 Sign Language Detection - MyHearingBuddy
 
-## ✨ Features
+An AI-powered American Sign Language (ASL) detection system using Machine Learning and MediaPipe.
 
-### 🔐 Authentication
-- OTP-based login UI (mock verification)
-- Clean and intuitive mobile number input
-- Beautiful gradient design with animations
+## 🎯 Features
 
-### 🏠 Home Page
-- Welcome dashboard with quick stats
-- Feature cards with hover effects
-- Animated floating background elements
-- Bottom navigation for easy access
+- **Real-time Detection**: Instant ASL gesture recognition
+- **28 Classes**: A-Z letters + SPACE + SEND
+- **High Accuracy**: Random Forest classifier with MediaPipe landmarks
+- **User-Friendly**: Simple Gradio interface
+- **Visual Feedback**: Annotated images with hand landmarks
 
-### ✍️ Text to Sign
-- Convert text into sign language gestures
-- Animated avatar display
-- Text-to-speech functionality
-- Character limit with visual feedback
+## 🚀 How to Use
 
-### 📷 Live Detection
-- Real-time sign language detection via webcam
-- Live camera preview with overlay UI
-- Detected letters with confidence percentage
-- AI-powered text correction
-- Automatic history tracking
+1. Upload an image or use your webcam
+2. Show a clear ASL hand gesture
+3. Get instant prediction with confidence score
 
-### 📜 History
-- View all detection history
-- Filter by all or AI-corrected entries
-- Beautiful timeline display
-- Clear all data option
+## 💡 Tips
 
-### 📘 Practice Module
-- Learn ISL alphabets (A-Z)
-- Interactive quiz system (10 questions)
-- Progress tracking
-- Instant feedback on answers
+- ✅ Good lighting
+- ✅ Plain background
+- ✅ Hand clearly visible
+- ✅ Hold gesture steady
 
-### ⚙️ Settings
-- Detection mode configuration (Manual/Optimized/Real-time)
-- Detection speed slider
-- Backend URL configuration
-- Connection testing
-- Dark mode toggle (UI ready)
-- Clear data option
-- Logout functionality
+## 🛠️ Technology
 
-## 🎨 Design Features
+- **ML Model**: Random Forest Classifier
+- **Hand Detection**: MediaPipe
+- **Image Processing**: OpenCV
+- **Interface**: Gradio
 
-- **Modern UI**: Glass morphism effects, gradient backgrounds
-- **Smooth Animations**: Fade in, slide in, scale, float, pulse effects
-- **Responsive Design**: Works on mobile and desktop
-- **Beautiful Colors**: Purple, pink, blue gradient themes
-- **Custom Scrollbar**: Styled with gradient colors
-- **Hover Effects**: Interactive cards and buttons
-- **Loading States**: Elegant loaders and transitions
+## 🔗 Links
 
-## 🚀 Getting Started
+- [GitHub](https://github.com/Rohit299-ue/-MyHearingBuddy)
+- [Frontend App](https://my-hearing-buddy.vercel.app/)
 
-### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
+## 📝 License
 
-### Installation
-
-1. Navigate to the project directory:
-```bash
-cd myhearingbuddy
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-4. Open your browser and visit:
-```
-http://localhost:5173
-```
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-## 🛠️ Tech Stack
-
-- **Frontend Framework**: React 18 with Hooks
-- **Routing**: React Router DOM v6
-- **Styling**: Tailwind CSS v4
-- **Build Tool**: Vite
-- **State Management**: Context API
-- **Animations**: CSS animations and transitions
-
-## 📁 Project Structure
-
-```
-myhearingbuddy/
-├── src/
-│   ├── components/
-│   │   ├── common/          # Reusable components (Loader, Toast)
-│   │   └── layout/          # Layout components (BottomNav, PageHeader)
-│   ├── context/             # React Context for state management
-│   ├── pages/               # All page components
-│   │   ├── AuthPage.jsx
-│   │   ├── HomePage.jsx
-│   │   ├── TextToSignPage.jsx
-│   │   ├── LiveDetectPage.jsx
-│   │   ├── HistoryPage.jsx
-│   │   ├── PracticePage.jsx
-│   │   └── SettingsPage.jsx
-│   ├── App.jsx              # Main app component with routing
-│   ├── main.jsx             # Entry point
-│   └── index.css            # Global styles and animations
-├── index.html
-├── package.json
-├── vite.config.js
-└── postcss.config.js
-```
-
-## 🎯 Demo Credentials
-
-For testing the authentication:
-- **Phone**: Any 10-digit number
-- **OTP**: Any 6-digit code (mock verification)
-
-## 🔮 Future Enhancements
-
-- Real backend API integration
-- Actual ML model for gesture detection
-- More sign language gestures
-- User profiles and progress tracking
-- Social features (share progress)
-- Offline mode support
-- PWA capabilities
-- Multi-language support
-
-## 📝 Notes
-
-- Camera access is required for Live Detection feature
-- All data is stored in browser's localStorage
-- Mock APIs are used for demonstration purposes
-- AI correction is simulated for demo
-
-## 🤝 Contributing
-
-This is a demo project. Feel free to fork and enhance!
-
-## 📄 License
-
-MIT License - feel free to use this project for learning and development.
+MIT License
 
 ---
 
-Made with ❤️ for the hearing and speech-impaired community
+Made with ❤️ by Rohit
