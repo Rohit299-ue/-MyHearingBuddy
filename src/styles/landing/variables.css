@@ -1,0 +1,17 @@
+:root {
+    --purple: #45108a;
+    --purple-light: #6a11cb;
+    --purple-dark: #1c0c52;
+    --pink: #e91e8c;
+    --pink-light: #f472b6;
+    --teal: #0fc6c2;
+    --amber: #f59e0b;
+    --green: #10b981;
+    --bg: #0d0b1a;
+    --surface: #13102a;
+    --surface2: #1a1636;
+    --text: #f0eeff;
+    --muted: #9b97c4;
+    --border: rgba(255,255,255,0.08);
+    --glow-purple: 0 0 60px rgba(106,17,203,0.3);
+}

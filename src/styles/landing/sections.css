@@ -1,0 +1,323 @@
+/* HOW IT WORKS */
+.landing-wrapper .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 64px;
+}
+
+.step {
+    text-align: center;
+    padding: 40px 32px;
+    background: var(--surface);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    position: relative;
+}
+
+.step-num {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--purple-light), var(--pink));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 auto 20px;
+}
+
+.step h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+}
+
+.step p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.7;
+}
+
+.step-connector {
+    position: absolute;
+    top: 44px;
+    right: -28px;
+    width: 56px;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(106,17,203,0.5), transparent);
+    z-index: 2;
+}
+
+/* TESTIMONIALS */
+.testimonials {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 64px;
+}
+
+.testimonial {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.testimonial:hover {
+    transform: translateY(-4px);
+}
+
+.quote-mark {
+    font-family: 'DM Serif Display', serif;
+    font-size: 4rem;
+    line-height: 1;
+    color: var(--purple-light);
+    opacity: 0.4;
+    margin-bottom: 8px;
+}
+
+.testimonial p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.75;
+    margin-bottom: 24px;
+    font-style: italic;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple-light), var(--pink));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.author-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.author-role {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.star-rating {
+    display: flex;
+    gap: 3px;
+    color: var(--amber);
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+}
+
+/* TECH STACK */
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 48px;
+}
+
+.tech-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.tech-card:hover {
+    border-color: rgba(168,85,247,0.3);
+    transform: translateY(-2px);
+}
+
+.tech-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.tech-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.tech-desc {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+/* CTA SECTION */
+.landing-wrapper .cta-section {
+    text-align: center;
+    padding: 100px 5%;
+}
+
+.cta-box {
+    background: linear-gradient(135deg, rgba(106,17,203,0.3), rgba(233,30,140,0.2));
+    border: 1px solid rgba(168,85,247,0.3);
+    border-radius: 32px;
+    padding: 80px 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(106,17,203,0.3) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.cta-box h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+    color: var(--text);
+}
+
+.cta-box p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 500px;
+    margin: 0 auto 36px;
+}
+
+/* MOBILE APP PREVIEW */
+.app-preview {
+    position: relative;
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+.phone-frame {
+    background: var(--surface);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 40px;
+    padding: 16px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+}
+
+.phone-notch {
+    width: 100px;
+    height: 24px;
+    background: var(--bg);
+    border-radius: 0 0 16px 16px;
+    margin: 0 auto 12px;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-top: none;
+}
+
+.phone-screen {
+    background: linear-gradient(160deg, var(--purple-dark), #1a0b40);
+    border-radius: 28px;
+    padding: 16px;
+    min-height: 400px;
+    overflow: hidden;
+}
+
+.phone-header {
+    text-align: center;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 16px;
+}
+
+.phone-emoji {
+    font-size: 2rem;
+}
+
+.phone-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    margin-top: 6px;
+}
+
+.phone-card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.phone-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.phone-card-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: white;
+}
+
+.phone-card-sub {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+}
+
+.phone-bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 12px;
+}
+
+.nav-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 1rem;
+}
+
+.nav-icon span {
+    font-size: 0.5rem;
+    color: rgba(255,255,255,0.5);
+}
+
+.nav-icon.active span {
+    color: #c4b5fd;
+}
