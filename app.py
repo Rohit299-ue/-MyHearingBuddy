@@ -431,15 +431,16 @@ if __name__ == "__main__":
     else:
         print("Running in demo mode (models not available)")
     
-    # Create Gradio app
-    print("\nLaunching Gradio interface...")
-    app = create_app()
+    # Create Gradio app FIRST
+    print("\nCreating Gradio interface...")
+    demo = create_app()
     
-    # Get the FastAPI app from Gradio
-    fastapi_app = app.app
+    # Now mount custom API routes to Gradio's FastAPI app
+    print("Mounting custom API endpoints...")
+    app = demo.app
     
     # Add CORS middleware
-    fastapi_app.add_middleware(
+    app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_credentials=True,
@@ -448,7 +449,7 @@ if __name__ == "__main__":
     )
     
     # Add health check endpoint
-    @fastapi_app.get("/health")
+    @app.get("/health")
     async def health_check():
         """Health check endpoint"""
         return JSONResponse({
@@ -457,7 +458,7 @@ if __name__ == "__main__":
         })
     
     # Add detection endpoint
-    @fastapi_app.post("/detect")
+    @app.post("/detect")
     async def detect_sign(request: Request):
         """Detection endpoint compatible with React frontend"""
         try:
@@ -543,6 +544,7 @@ if __name__ == "__main__":
             }, status_code=500)
     
     # Launch app
-    print("API endpoints registered: /health, /detect")
-    app.launch()
+    print("✅ API endpoints registered: /health, /detect")
+    print("🚀 Launching Gradio app...")
+    demo.launch()
 
