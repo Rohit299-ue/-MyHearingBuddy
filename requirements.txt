@@ -3,3 +3,5 @@ mediapipe==0.10.35
 scikit-learn==1.8.0
 numpy<2.0
 pillow==10.4.0
+flask==3.0.0
+flask-cors==4.0.0
