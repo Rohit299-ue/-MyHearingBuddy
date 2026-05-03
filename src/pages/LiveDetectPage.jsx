@@ -77,47 +77,75 @@ const LiveDetectPage = () => {
     canvas.width  = CAPTURE_WIDTH;
     canvas.height = CAPTURE_HEIGHT;
     canvas.getContext("2d").drawImage(video, 0, 0, CAPTURE_WIDTH, CAPTURE_HEIGHT);
-    const b64 = canvas.toDataURL("image/jpeg", 0.6);
+    
+    // Convert to blob for proper Gradio API format
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        busyRef.current = false;
+        return;
+      }
 
-    // Use Gradio's /api/predict endpoint
-    fetch(`${backendUrl}/api/predict`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: [b64] }),
-      signal: AbortSignal.timeout(3000),
-    })
-      .then(r => r.json())
-      .then(data => {
-        const overlay = overlayRef.current;
-        const ctx     = overlay?.getContext("2d");
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result;
 
-        // Clear previous overlay drawings
-        if (ctx && overlay) ctx.clearRect(0, 0, overlay.width, overlay.height);
+        // Use Gradio's /api/predict endpoint
+        fetch(`${backendUrl}/api/predict`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            data: [base64data]  // Send as base64 data URL
+          }),
+          signal: AbortSignal.timeout(3000),
+        })
+          .then(r => r.json())
+          .then(data => {
+            const overlay = overlayRef.current;
+            const ctx     = overlay?.getContext("2d");
 
-        // Gradio returns: { data: [annotated_image, prediction_text] }
-        if (data.data && data.data.length >= 2) {
-          const predictionText = data.data[1];
-          
-          // Parse prediction text (format: "**Detected Sign:** X\n\n**Confidence:** 95.5%")
-          const signMatch = predictionText.match(/\*\*Detected Sign:\*\* (\w+)/);
-          const confMatch = predictionText.match(/\*\*Confidence:\*\* ([\d.]+)%/);
-          
-          if (signMatch && confMatch) {
-            const pred = signMatch[1];
-            const conf = parseFloat(confMatch[1]) / 100;
-            
-            if (conf >= MIN_CONFIDENCE) {
-              setGestureText(pred);
-              setConfidence(conf);
+            // Clear previous overlay drawings
+            if (ctx && overlay) ctx.clearRect(0, 0, overlay.width, overlay.height);
 
-              // Stability check before committing
-              if (pred === lastRawRef.current) stableRef.current++;
-              else { stableRef.current = 1; lastRawRef.current = pred; }
+            // Gradio returns: { data: [annotated_image, prediction_text] }
+            if (data.data && data.data.length >= 2) {
+              const predictionText = data.data[1];
+              
+              // Parse prediction text (format: "**Detected Sign:** X\n\n**Confidence:** 95.5%")
+              const signMatch = predictionText.match(/\*\*Detected Sign:\*\* (\w+)/);
+              const confMatch = predictionText.match(/\*\*Confidence:\*\* ([\d.]+)%/);
+              
+              if (signMatch && confMatch) {
+                const pred = signMatch[1];
+                const conf = parseFloat(confMatch[1]) / 100;
+                
+                if (conf >= MIN_CONFIDENCE) {
+                  setGestureText(pred);
+                  setConfidence(conf);
 
-              if (stableRef.current >= STABLE_FRAMES && pred !== lastCommit.current) {
-                lastCommit.current = pred;
-                stableRef.current  = 0;
-                commitLetter(pred);
+                  // Stability check before committing
+                  if (pred === lastRawRef.current) stableRef.current++;
+                  else { stableRef.current = 1; lastRawRef.current = pred; }
+
+                  if (stableRef.current >= STABLE_FRAMES && pred !== lastCommit.current) {
+                    lastCommit.current = pred;
+                    stableRef.current  = 0;
+                    commitLetter(pred);
+                  }
+                } else {
+                  setGestureText("-");
+                  setConfidence(0);
+                  lastRawRef.current = "";
+                  stableRef.current  = 0;
+                }
+              } else {
+                // Check if it's "No hand detected" message
+                if (predictionText.includes("No hand detected")) {
+                  setGestureText("-");
+                  setConfidence(0);
+                  lastRawRef.current = "";
+                  stableRef.current  = 0;
+                }
               }
             } else {
               setGestureText("-");
@@ -125,24 +153,18 @@ const LiveDetectPage = () => {
               lastRawRef.current = "";
               stableRef.current  = 0;
             }
-          }
-        } else {
-          setGestureText("-");
-          setConfidence(0);
-          lastRawRef.current = "";
-          stableRef.current  = 0;
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        busyRef.current = false;
-        // Adaptive loop: schedule next frame shortly after this one finishes
-        // instead of waiting for a fixed interval. This keeps the pipeline
-        // full when the backend is fast and naturally backs off when it's slow.
-        if (detectRef.current !== null) {
-          detectRef.current = setTimeout(sendFrame, LOOP_DELAY_MS);
-        }
-      });
+          })
+          .catch(() => {})
+          .finally(() => {
+            busyRef.current = false;
+            // Adaptive loop: schedule next frame shortly after this one finishes
+            if (detectRef.current !== null) {
+              detectRef.current = setTimeout(sendFrame, LOOP_DELAY_MS);
+            }
+          });
+      };
+      reader.readAsDataURL(blob);
+    }, 'image/jpeg', 0.7);
   }, [backendUrl, commitLetter]);
 
   // ── Keep overlay canvas sized to match the video container ───────────────
