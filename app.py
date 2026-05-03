@@ -7,7 +7,11 @@ import gradio as gr
 import cv2
 import numpy as np
 import os
+import base64
+import json
 from typing import Tuple
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 # Try to import ML dependencies (graceful fallback if not available)
 try:
@@ -336,6 +340,110 @@ Please try again with a different image.
         return image, error_text.strip()
 
 # ============================================================================
+# FLASK API FOR REACT FRONTEND
+# ============================================================================
+
+def create_flask_api():
+    """Create Flask API for React frontend compatibility"""
+    flask_app = Flask(__name__)
+    CORS(flask_app)  # Enable CORS for frontend
+    
+    @flask_app.route('/health', methods=['GET'])
+    def health_check():
+        """Health check endpoint"""
+        return jsonify({
+            'status': 'ok',
+            'model_loaded': model is not None and hand_detector is not None
+        })
+    
+    @flask_app.route('/detect', methods=['POST'])
+    def detect_sign():
+        """Detection endpoint compatible with React frontend"""
+        try:
+            data = request.get_json()
+            image_b64 = data.get('image', '')
+            
+            if not image_b64:
+                return jsonify({'success': False, 'error': 'No image provided'}), 400
+            
+            # Decode base64 image
+            if ',' in image_b64:
+                image_b64 = image_b64.split(',')[1]
+            
+            image_bytes = base64.b64decode(image_b64)
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            if image is None:
+                return jsonify({'success': False, 'error': 'Invalid image'}), 400
+            
+            # Preprocess
+            processed_image = preprocess_image(image)
+            
+            # Extract features
+            features, landmarks_info = extract_hand_features(processed_image)
+            
+            if features is None:
+                return jsonify({
+                    'success': False,
+                    'prediction': '-',
+                    'confidence': 0,
+                    'message': 'No hand detected'
+                })
+            
+            # Predict
+            if len(features) != 42:
+                return jsonify({
+                    'success': False,
+                    'prediction': '-',
+                    'confidence': 0,
+                    'message': 'Invalid hand data'
+                })
+            
+            prediction = model.predict([features])
+            predicted_label = LABELS[int(prediction[0])]
+            
+            probabilities = model.predict_proba([features])
+            confidence = float(np.max(probabilities))
+            
+            # Get bounding box
+            h, w = processed_image.shape[:2]
+            x_coords = landmarks_info['x_coords']
+            y_coords = landmarks_info['y_coords']
+            
+            x1 = int(min(x_coords) * w) - 20
+            y1 = int(min(y_coords) * h) - 20
+            x2 = int(max(x_coords) * w) + 20
+            y2 = int(max(y_coords) * h) + 20
+            
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(w, x2), min(h, y2)
+            
+            # Get landmarks for frontend
+            landmarks = []
+            for lm in landmarks_info['landmarks']:
+                landmarks.append({'x': lm.x, 'y': lm.y, 'z': lm.z})
+            
+            return jsonify({
+                'success': True,
+                'prediction': predicted_label,
+                'confidence': confidence,
+                'bounding_box': {
+                    'x1': x1, 'y1': y1,
+                    'x2': x2, 'y2': y2
+                },
+                'landmarks': landmarks
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    
+    return flask_app
+
+# ============================================================================
 # GRADIO INTERFACE
 # ============================================================================
 
@@ -426,8 +534,12 @@ if __name__ == "__main__":
     else:
         print("Running in demo mode (models not available)")
     
-    # Create and launch app
-    print("\nLaunching Gradio interface...")
+    # Create Flask API
+    flask_app = create_flask_api()
+    
+    # Create and launch Gradio app with Flask API mounted
+    print("\nLaunching Gradio interface with Flask API...")
     app = create_app()
     
-    app.launch()
+    # Mount Flask app to Gradio
+    app.launch(app_kwargs={"app": flask_app})
