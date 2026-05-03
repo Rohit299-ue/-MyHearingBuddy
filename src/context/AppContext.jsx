@@ -17,7 +17,7 @@ export const AppProvider = ({ children }) => {
   const [settings, setSettings] = useState({
     detectionMode: 'optimized',
     detectionSpeed: 50,
-    backendUrl: 'http://localhost:5000',
+    backendUrl: 'https://rohitrohantripathy-sign-language-ml.hf.space',
     darkMode: false,
   });
 
