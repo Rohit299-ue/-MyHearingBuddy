@@ -39,9 +39,9 @@ const LiveDetectPage = () => {
 
   // ── Health check ──────────────────────────────────────────────────────────
   useEffect(() => {
-    fetch(`${backendUrl}/health`, { signal: AbortSignal.timeout(4000) })
-      .then(r => r.json())
-      .then(d => setBackendOk(d.model_loaded === true))
+    // Check if Gradio app is accessible
+    fetch(`${backendUrl}/`, { signal: AbortSignal.timeout(4000) })
+      .then(r => setBackendOk(r.ok))
       .catch(() => setBackendOk(false));
   }, [backendUrl]);
 
@@ -79,11 +79,12 @@ const LiveDetectPage = () => {
     canvas.getContext("2d").drawImage(video, 0, 0, CAPTURE_WIDTH, CAPTURE_HEIGHT);
     const b64 = canvas.toDataURL("image/jpeg", 0.6);
 
-    fetch(`${backendUrl}/detect`, {
+    // Use Gradio's /api/predict endpoint
+    fetch(`${backendUrl}/api/predict`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: b64 }),
-      signal: AbortSignal.timeout(2500),
+      body: JSON.stringify({ data: [b64] }),
+      signal: AbortSignal.timeout(3000),
     })
       .then(r => r.json())
       .then(data => {
@@ -93,45 +94,37 @@ const LiveDetectPage = () => {
         // Clear previous overlay drawings
         if (ctx && overlay) ctx.clearRect(0, 0, overlay.width, overlay.height);
 
-        if (data.success && data.confidence >= MIN_CONFIDENCE) {
-          const pred = data.prediction;
-          setGestureText(pred);
-          setConfidence(data.confidence);
+        // Gradio returns: { data: [annotated_image, prediction_text] }
+        if (data.data && data.data.length >= 2) {
+          const predictionText = data.data[1];
+          
+          // Parse prediction text (format: "**Detected Sign:** X\n\n**Confidence:** 95.5%")
+          const signMatch = predictionText.match(/\*\*Detected Sign:\*\* (\w+)/);
+          const confMatch = predictionText.match(/\*\*Confidence:\*\* ([\d.]+)%/);
+          
+          if (signMatch && confMatch) {
+            const pred = signMatch[1];
+            const conf = parseFloat(confMatch[1]) / 100;
+            
+            if (conf >= MIN_CONFIDENCE) {
+              setGestureText(pred);
+              setConfidence(conf);
 
-          // Draw bounding box on overlay canvas
-          if (ctx && overlay && data.bounding_box) {
-            const { x1, y1, x2, y2 } = data.bounding_box;
-            ctx.strokeStyle = "#00f5ff";
-            ctx.lineWidth   = 2;
-            ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
-            ctx.font      = "bold 15px monospace";
-            const lbl = `${pred} ${Math.round(data.confidence * 100)}%`;
-            const tw  = ctx.measureText(lbl).width;
-            const ly  = y1 > 24 ? y1 - 6 : y2 + 18;
-            ctx.fillStyle = "rgba(0,245,255,0.9)";
-            ctx.fillRect(x1, ly - 16, tw + 10, 20);
-            ctx.fillStyle = "#060a12";
-            ctx.fillText(lbl, x1 + 5, ly);
-          }
+              // Stability check before committing
+              if (pred === lastRawRef.current) stableRef.current++;
+              else { stableRef.current = 1; lastRawRef.current = pred; }
 
-          // Draw landmarks on overlay canvas
-          if (ctx && overlay && data.landmarks) {
-            data.landmarks.forEach(lm => {
-              ctx.beginPath();
-              ctx.arc(lm.x * overlay.width, lm.y * overlay.height, 4, 0, 2 * Math.PI);
-              ctx.fillStyle = "#ff4fa3";
-              ctx.fill();
-            });
-          }
-
-          // Stability check before committing
-          if (pred === lastRawRef.current) stableRef.current++;
-          else { stableRef.current = 1; lastRawRef.current = pred; }
-
-          if (stableRef.current >= STABLE_FRAMES && pred !== lastCommit.current) {
-            lastCommit.current = pred;
-            stableRef.current  = 0;
-            commitLetter(pred);
+              if (stableRef.current >= STABLE_FRAMES && pred !== lastCommit.current) {
+                lastCommit.current = pred;
+                stableRef.current  = 0;
+                commitLetter(pred);
+              }
+            } else {
+              setGestureText("-");
+              setConfidence(0);
+              lastRawRef.current = "";
+              stableRef.current  = 0;
+            }
           }
         } else {
           setGestureText("-");
