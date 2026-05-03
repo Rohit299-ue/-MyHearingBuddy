@@ -66,32 +66,32 @@ def load_models():
             with open(model_path, 'rb') as f:
                 model_dict = pickle.load(f)
                 model = model_dict['model']
-            print("Model loaded successfully")
+            print("✅ Model loaded successfully")
         else:
-            print(f"Model file not found at {model_path}")
+            print(f"❌ Model file not found at {model_path}")
             model = None
         
-        # Load MediaPipe hand detector
+        # Load MediaPipe hand detector with LOWER thresholds for better detection
         detector_path = os.path.join(os.path.dirname(__file__), 'backend', 'hand_landmarker.task')
         if os.path.exists(detector_path):
             base_options = python.BaseOptions(model_asset_path=detector_path)
             options = vision.HandLandmarkerOptions(
                 base_options=base_options,
                 num_hands=1,
-                min_hand_detection_confidence=0.3,
-                min_hand_presence_confidence=0.3,
-                min_tracking_confidence=0.3
+                min_hand_detection_confidence=0.2,  # LOWERED from 0.3
+                min_hand_presence_confidence=0.2,   # LOWERED from 0.3
+                min_tracking_confidence=0.2         # LOWERED from 0.3
             )
             hand_detector = vision.HandLandmarker.create_from_options(options)
-            print("Hand detector loaded successfully")
+            print("✅ Hand detector loaded successfully")
         else:
-            print(f"Hand detector not found at {detector_path}")
+            print(f"❌ Hand detector not found at {detector_path}")
             hand_detector = None
         
         return model is not None and hand_detector is not None
         
     except Exception as e:
-        print(f"Error loading models: {e}")
+        print(f"❌ Error loading models: {e}")
         return False
 
 # ============================================================================
