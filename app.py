@@ -10,7 +10,7 @@ import os
 import base64
 import json
 from typing import Tuple, Dict, Any
-from fastapi import Request
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -435,12 +435,12 @@ if __name__ == "__main__":
     print("\nCreating Gradio interface...")
     demo = create_app()
     
-    # Now mount custom API routes to Gradio's FastAPI app
-    print("Mounting custom API endpoints...")
-    app = demo.app
+    # Create a custom FastAPI app
+    from fastapi import FastAPI
+    custom_app = FastAPI()
     
-    # Add CORS middleware
-    app.add_middleware(
+    # Add CORS middleware to custom app
+    custom_app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_credentials=True,
@@ -449,16 +449,16 @@ if __name__ == "__main__":
     )
     
     # Add health check endpoint
-    @app.get("/health")
+    @custom_app.get("/health")
     async def health_check():
         """Health check endpoint"""
-        return JSONResponse({
+        return {
             'status': 'ok',
             'model_loaded': model is not None and hand_detector is not None
-        })
+        }
     
     # Add detection endpoint
-    @app.post("/detect")
+    @custom_app.post("/detect")
     async def detect_sign(request: Request):
         """Detection endpoint compatible with React frontend"""
         try:
@@ -526,7 +526,7 @@ if __name__ == "__main__":
             for lm in landmarks_info['landmarks']:
                 landmarks.append({'x': lm.x, 'y': lm.y, 'z': lm.z})
             
-            return JSONResponse({
+            return {
                 'success': True,
                 'prediction': predicted_label,
                 'confidence': confidence,
@@ -535,7 +535,7 @@ if __name__ == "__main__":
                     'x2': x2, 'y2': y2
                 },
                 'landmarks': landmarks
-            })
+            }
             
         except Exception as e:
             return JSONResponse({
@@ -543,8 +543,12 @@ if __name__ == "__main__":
                 'error': str(e)
             }, status_code=500)
     
+    # Mount Gradio app to custom FastAPI app
+    from gradio.routes import mount_gradio_app
+    app = mount_gradio_app(custom_app, demo, path="/")
+    
     # Launch app
     print("✅ API endpoints registered: /health, /detect")
-    print("🚀 Launching Gradio app...")
-    demo.launch()
+    print("🚀 Launching Gradio app with custom FastAPI...")
+    demo.launch(app_kwargs={"app": app})
 
